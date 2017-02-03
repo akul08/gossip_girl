@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	Main Page
+{% endblock %}
+
+{% block script %}
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+	<script type="text/javascript" charset="utf-8">
+	    var socket = io.connect('http://' + document.domain + ':' + location.port);
+	    socket.on('connect', function() {
+	        socket.emit('my event', {data: 'I\'m connected!'});
+	    });
+	    socket.on('my response', function(msg) {
+	    	console.log(msg);
+	    });
+	</script>
+{% endblock %}
+
+{% block body %}
+	{% if username %}
+		<h4>You are logged in as: {{ username }}</h4>
+	{% endif %}
+{% endblock %}
