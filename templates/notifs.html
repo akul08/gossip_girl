@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block script %}
+    <script type="text/javascript" charset="utf-8">
+
+        var namespace = '/notifs';
+        var socket = io.connect(location.protocol + "//" + location.host + namespace);
+        socket.on('connect', function() {
+            socket.emit('joined', {});
+        });
+        socket.on('my_response', function(msg) {
+          $('#notifs').append($('<li>').text(msg.data));
+            console.log(msg);
+        });
+        function leave_room() {
+            socket.emit('left', {}, function () {
+                socket.disconnect();
+
+                window.location.href = "{{ url_for('index') }}"
+            });
+        }
+    </script>
+{% endblock %}
+
+{% block body %}
+    Welcome to Notifs
+
+    <div id="notifs">
+    </div>
+
+    <a href="#" onclick="leave_room();">Leave this room</a>
+{% endblock %}

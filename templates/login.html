@@ -1,14 +1,12 @@
 {% extends "base.html" %}
+{% block style %}
+    <style> 
+        body {
+            background: #8bc34a;
+        }
+    </style>
+{% endblock %}
 {% block body %}
-{# 
-	<h4>Login</h4>
-    <form action="" method="POST">
-        {{ form.hidden_tag() }}
-        {{ form.username.label }} {{ form.username(size=20) }}
-        {{ form.password.label }} {{ form.password(size=20) }}
-        
-    </form>
- #}
     <div class="form-box">
         <h1>Please login</h1>
         <br>

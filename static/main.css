@@ -23,3 +23,14 @@ body {
     list-style: none;
     padding: 30px 30px;
 }
+.follow-link {
+    background: green;
+    padding: 20px;
+}
+.unfollow-link {
+    background: red;
+    padding: 20px;
+}
+.follow-link a, .unfollow-link a {
+    color: white;
+}

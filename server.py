@@ -26,13 +26,14 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+all_rooms = ['suits', 'flash', 'game_of_thrones',
+             'impractical_jokers', 'gossip_girl', 'sherlock']
+
 
 def authenticated_only(f):
     @functools.wraps(f)
     def wrapped(*args, **kwargs):
-        # print '*' * 20, current_user
         if not current_user.is_authenticated:
-            print 'not authenticated_only'
             return redirect(url_for('login'))
         else:
             return f(*args, **kwargs)
@@ -45,10 +46,6 @@ def load_user(user_id):
     if not u:
         return None
     return User(u['_id'])
-
-
-def ack():
-    print 'message was received!'
 
 
 @app.route('/')
@@ -76,7 +73,6 @@ def login():
                                           form.password.data):
                 # session['username'] = form.username.data
                 user_obj = User(str(user['_id']))
-                print user_obj
                 login_user(user_obj)
                 flash('Login Successful')
                 return redirect(url_for('index'))
@@ -97,35 +93,104 @@ def register():
 
     form = RegisterForm()
     if form.validate_on_submit():
-        print form.username.data
         users = mongo.db.users
         existing_user_name = users.find_one({'name': form.username.data})
         if existing_user_name is None:
             hashpass = bcrypt.generate_password_hash(form.password.data)
             users.insert({'name': form.username.data,
-                          'password': hashpass})
+                          'password': hashpass,
+                          'rooms': []})
             session['username'] = form.username.data
             return redirect(url_for('index'))
-        flash('Username already exists')
 
+        flash('Username already exists')
         return render_template('register.html', form=form)
     return render_template('register.html', form=form)
 
 
 @app.route('/logout')
+@authenticated_only
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
 
-@app.route('/success')
-def success():
+@app.route('/rooms')
+@authenticated_only
+def rooms():
+    user_rooms = mongo.db.users.find_one(
+        {'_id': ObjectId(current_user.get_id())})['rooms']
+    all_rooms_dict = {k: 1 if k in user_rooms else 0 for k in all_rooms}
+    # return 'hi'
+    return render_template('rooms.html', all_rooms_dict=all_rooms_dict)
+
+
+@app.route('/follow/<room>/<goto_rooms>')
+@authenticated_only
+def follow(room, goto_rooms=False):
+    mongo.db.users.update({'_id': ObjectId(current_user.get_id())},
+                          {'$addToSet': {'rooms': room}})
+
+    print mongo.db.users.find_one({'_id': ObjectId(current_user.get_id())})['rooms']
+    if goto_rooms:
+        flash('Started following: ' + room)
+        return redirect(url_for('rooms'))
     return 'Success'
 
 
-@socketio.on('connect')
+@app.route('/unfollow/<room>/<goto_rooms>')
+@authenticated_only
+def unfollow(room, goto_rooms=False):
+    mongo.db.users.update({'_id': ObjectId(current_user.get_id())},
+                          {'$pull': {'rooms': room}})
+    print mongo.db.users.find_one({'_id': ObjectId(current_user.get_id())})['rooms']
+    if goto_rooms:
+        flash('Unfollowing: ' + room)
+        return redirect(url_for('rooms'))
+    return 'Success'
+
+
+@app.route('/inroom/<room>')
+@authenticated_only
+def inroom(room):
+    if mongo.db.users.find({'_id': ObjectId(current_user.get_id()),
+                            'rooms': room}).count():
+        return 'yes in room: ' + room
+    return 'Not in room: ' + room
+
+
+@app.route('/notifs')
+def notifs():
+    return render_template('notifs.html')
+
+
+@socketio.on('connect', namespace='/notifs')
 def test_connect():
-    emit('my response', {'data': 'Connected'}, callback=ack)
+    print '*' * 20
+    print 'Connected'
+    emit('my_response', {'data': 'Connected'})
+
+
+@socketio.on('joined', namespace='/notifs')
+def joined(message):
+    user = mongo.db.users.find_one({'_id': ObjectId(current_user.get_id())})
+
+    for room in user['rooms']:
+        join_room(room)
+        # emit('my_response', {'data': 'Joined ' + room})
+        emit('my_response',
+             {'data': user['name'] + ' Joined ' + room},
+             room=room)
+
+
+@socketio.on('left', namespace='/notifs')
+def left(message):
+    user = mongo.db.users.find_one({'_id': ObjectId(current_user.get_id())})
+    for room in user['rooms']:
+        leave_room(room)
+        emit('my_response',
+             {'data': user['name'] + ' Left ' + room},
+             room=room)
 
 
 @socketio.on('message')
