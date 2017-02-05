@@ -14,3 +14,9 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[Required()])
     submit = SubmitField('Register')
 
+
+class UpdateForm(FlaskForm):
+    room = StringField('Room', validators=[Required()])
+    update = StringField('update', validators=[Required()])
+    submit = SubmitField('Register')
+
