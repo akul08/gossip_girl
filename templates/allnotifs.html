@@ -3,7 +3,7 @@
 {% block script %}
     <script type="text/javascript" charset="utf-8">
 
-        var namespace = '/notifs';
+        var namespace = '/allnotifs';
         var socket = io.connect(location.protocol + "//" + location.host + namespace);
         socket.on('connect', function() {
             socket.emit('joined', {});
@@ -22,8 +22,8 @@
 {% endblock %}
 
 {% block body %}
-    <h3>Welcome to Notifs</h3>
-    <h4>All your subscribed rooms notification will appear here.</h4>
+    <h3>Welcome to All Notifs</h3>
+    <h4>Notifications of all the rooms will appear here.</h4>
     
     <div id="notifs">
     </div>

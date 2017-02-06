@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h1>Welcome to Update db</h1>
+    <h1>Update db for Rooms</h1>
     <br>
     <form class="form-signin" autocomplete="off" role="form" method="post" action="">
       {{ form.csrf_token }}
       <p>
-        {{ form.room }}
+        Select Room: {{ form.room }}
         <span class="error">
           {% if form.room.errors %}
             {% for error in form.room.errors %}
@@ -16,7 +16,7 @@
         </span>
       </p>
       <p>
-      {{ form.update(placeholder="Update") }}
+      {{ form.update(placeholder="Update", cols="65", rows="5") }}
         <span class="error">
           {% if form.update.errors %}
             {% for error in form.update.errors %}
@@ -26,7 +26,6 @@
         </span>
       </p>
       {{ form.submit(class="btn btn-sm btn-success") }}
-      {# <button class="btn btn-sm btn-success" type="submit">Sign in</button> #}
     </form>
 
 {% endblock %}

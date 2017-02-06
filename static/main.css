@@ -1,43 +1,72 @@
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
 }
+
 body {
     padding: 50px;
 }
+
 .form-box {
     margin: 150px;
     margin-bottom: 50px;
 }
+
 .header-list {
     background: #ddd;
     height: 80px;
 }
+
 .header-list ul {
     margin: 0 auto;
     text-align: center;
     padding: 25px 0;
 }
+
 .header-list li {
     display: inline;
     list-style: none;
     padding: 30px 30px;
 }
+
 .follow-link {
     background: green;
     padding: 20px;
 }
+
 .unfollow-link {
     background: red;
     padding: 20px;
 }
-.follow-link a, .unfollow-link a {
+
+.follow-link a,
+.unfollow-link a {
     color: white;
 }
 
 .bold {
     font-weight: bold;
 }
+
 .ts {
     float: right;
+}
+
+.error {
+    color: red;
+}
+
+.username-join {
+    color: green;
+}
+
+.username-left {
+    color: red;
+}
+
+.notification-msg {
+    background: lavender;
+    display: inline-block;
+    width: 90%;
 }
