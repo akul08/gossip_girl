@@ -20,6 +20,9 @@ monkey.patch_all(thread=False)
 app = Flask(__name__)
 app.config.from_object('config')
 
+url = os.getenv('MONGOLAB_URI', 'mongodb://localhost:27017')
+app.config['MONGO_URI'] = url
+
 mongo = PyMongo(app)
 socketio = SocketIO(app, async_mode='gevent')
 bcrypt = Bcrypt(app)
@@ -288,4 +291,4 @@ def left(message):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
