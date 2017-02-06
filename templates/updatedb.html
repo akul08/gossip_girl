@@ -6,7 +6,7 @@
     <form class="form-signin" autocomplete="off" role="form" method="post" action="">
       {{ form.csrf_token }}
       <p>
-        {{ form.room(placeholder="Room") }}
+        {{ form.room }}
         <span class="error">
           {% if form.room.errors %}
             {% for error in form.room.errors %}

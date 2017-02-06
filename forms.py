@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, SubmitField, PasswordField
+from wtforms import StringField, BooleanField, SubmitField, PasswordField, SelectField
 from wtforms.validators import Required
 
 
@@ -16,7 +16,7 @@ class RegisterForm(FlaskForm):
 
 
 class UpdateForm(FlaskForm):
-    room = StringField('Room', validators=[Required()])
+    room = SelectField('Room', validators=[Required()], choices=[])
     update = StringField('update', validators=[Required()])
     submit = SubmitField('Register')
 

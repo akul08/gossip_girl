@@ -9,13 +9,12 @@
             socket.emit('joined', {});
         });
         socket.on('my_response', function(msg) {
-          $('#notifs').append($('<li>').text(msg.data));
+          $('#notifs').append($('<li>').html(msg.data));
             console.log(msg);
         });
         function leave_room() {
             socket.emit('left', {}, function () {
                 socket.disconnect();
-
                 window.location.href = "{{ url_for('index') }}"
             });
         }

@@ -21,7 +21,6 @@ app = Flask(__name__)
 app.config.from_object('config')
 # app.config['MONGO_DBNAME'] = ''
 # app.config['MONGO_URI'] = ''
-app.config['SECRET_KEY'] = 'secret!'
 
 mongo = PyMongo(app)
 socketio = SocketIO(app, async_mode='gevent')
@@ -36,10 +35,8 @@ all_rooms = ['suits', 'flash', 'game_of_thrones',
 
 
 def background_check(last_id):
-    print '*' * 20
     ts = last_id['ts']
     with app.app_context():
-        mongo.db.new.insert({'x': 'yayaya', 'ts': datetime.datetime.now()})
         cursor = mongo.db.new.find({'ts': {'$gt': ts}},
                                    cursor_type=pymongo.
                                    CursorType.TAILABLE_AWAIT,
@@ -48,16 +45,16 @@ def background_check(last_id):
         while cursor.alive:
             try:
                 record = cursor.next()
-                print record
-                socketio.emit(
-                    'my_response', {'data': str(record)}, namespace='/notifs')
+                str_record = '''<span class="bold">%s</span>:
+                                 %s <span class="ts">[%s]</span>'''
+                response = str_record % (record['room'], record['update'],
+                                         record['ts']
+                                         .strftime("%Y-%m-%d %H:%M:%S"))
+                socketio.emit('my_response',
+                              {'data': response}, namespace='/notifs',
+                              room=record['room'])
             except StopIteration:
-                print 'waiting'
-                # socketio.emit(
-                #     'my_response', {'data': 'waiting'}, namespace='/notifs')
                 socketio.sleep(1)
-    print '*' * 20
-    print 'Thread finished'
 
 
 def authenticated_only(f):
@@ -161,8 +158,6 @@ def follow(room, goto_rooms=False):
     mongo.db.users.update({'_id': ObjectId(current_user.get_id())},
                           {'$addToSet': {'rooms': room}})
 
-    print mongo.db.users.find_one(
-        {'_id': ObjectId(current_user.get_id())})['rooms']
     if goto_rooms:
         flash('Started following: ' + room)
         return redirect(url_for('rooms'))
@@ -174,8 +169,6 @@ def follow(room, goto_rooms=False):
 def unfollow(room, goto_rooms=False):
     mongo.db.users.update({'_id': ObjectId(current_user.get_id())},
                           {'$pull': {'rooms': room}})
-    print mongo.db.users.find_one(
-        {'_id': ObjectId(current_user.get_id())})['rooms']
     if goto_rooms:
         flash('Unfollowing: ' + room)
         return redirect(url_for('rooms'))
@@ -193,6 +186,7 @@ def inroom(room):
 
 @app.route('/notifs')
 def notifs():
+    create()
     return render_template('notifs.html')
 
 
@@ -200,51 +194,34 @@ def notifs():
 @authenticated_only
 def updatedb():
     form = UpdateForm()
+    form.room.choices = zip(all_rooms, all_rooms)
     if form.validate_on_submit():
-        # rooms = mongo.db.rooms
-        # room = rooms.find_one({'name': form.room.data})
-        # if room:
-        #     room_id = str(room['_id'])
-        #     rooms.update({'_id': ObjectId(room_id)},
-        #                  {'$addToSet':
-        #                   {'status': {'status_update': form.update.data,
-        #                               'timestamp': datetime.datetime.now()}}})
-        #     flash('Message sent!')
-        # else:
-        #     # mongo.db.create_collection(rooms)
-
-            # rooms.insert({'name': form.room.data,
-            #               'status': [{'status_update': form.update.data,
-            #                           'timestamp': datetime.datetime.now()}]})
-            # # flash('Room doesn\'t exists\nCreated Room & sent mssg')
-        mongo.db.new.insert(
-            {'x': form.room.data, 'ts': datetime.datetime.now()})
+        mongo.db.new.insert({'room': form.room.data,
+                             'update': form.update.data,
+                             'ts': datetime.datetime.now()})
+        flash('Message sent!')
         return render_template('updatedb.html', form=form)
     return render_template('updatedb.html', form=form)
 
 
-@app.route('/create')
-@authenticated_only
 def create():
     global thread
     try:
         mongo.db.create_collection('new', capped=True, size=100000)
     except pymongo.errors.CollectionInvalid, e:
-        print 'Error is this: ', e
+        pass
     last_id = mongo.db.new.find().sort('$natural', -1).limit(1).next()
 
     if thread is None:
         thread = Thread(target=background_check, args=[last_id])
         thread.start()
-        socketio.emit(
-            'my_response', {'data': 'this func finished'}, namespace='/notifs')
-
-    return 'success'
+        socketio.emit('my_response',
+                      {'data': 'Started Notifications'},
+                      namespace='/notifs')
 
 
 @socketio.on('connect', namespace='/notifs')
 def test_connect():
-    print '*' * 20
     print 'Connected'
     emit('my_response', {'data': 'Connected'})
 
@@ -255,7 +232,6 @@ def joined(message):
 
     for room in user['rooms']:
         join_room(room)
-        # emit('my_response', {'data': 'Joined ' + room})
         emit('my_response',
              {'data': user['name'] + ' Joined ' + room},
              room=room)
@@ -269,17 +245,6 @@ def left(message):
         emit('my_response',
              {'data': user['name'] + ' Left ' + room},
              room=room)
-
-
-@socketio.on('message')
-def handle_message(message):
-    print('received message: ' + message)
-
-
-@socketio.on('my event')
-def my_event(message):
-    print('Connected to', request.sid)
-    print('received message from event: ', message)
 
 
 if __name__ == '__main__':

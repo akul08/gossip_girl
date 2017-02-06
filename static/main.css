@@ -34,3 +34,10 @@ body {
 .follow-link a, .unfollow-link a {
     color: white;
 }
+
+.bold {
+    font-weight: bold;
+}
+.ts {
+    float: right;
+}
