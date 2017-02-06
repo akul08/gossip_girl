@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import datetime
 import time
 from threading import Thread
@@ -14,8 +17,6 @@ from flask_pymongo import PyMongo, pymongo
 from flask_bcrypt import Bcrypt
 from forms import LoginForm, RegisterForm, UpdateForm
 from models import User
-from gevent import monkey
-monkey.patch_all(thread=False)
 
 app = Flask(__name__)
 app.config.from_object('config')
